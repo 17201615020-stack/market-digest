@@ -1,0 +1,34 @@
+name: daily-digest
+
+on:
+  schedule:
+    - cron: "30 0 * * *"   # 每天 00:30 UTC = 北京 08:30
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate digest
+        run: python gen_digest.py > README.md
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "market-digest-bot"
+          git config user.email "bot@users.noreply.github.com"
+          if git diff --quiet README.md; then
+            echo "no change"
+          else
+            git add README.md
+            git commit -m "chore: update digest $(date -u +%Y-%m-%d)"
+            git push
+          fi
