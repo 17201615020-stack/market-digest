@@ -18,17 +18,16 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Generate digest
-        run: python gen_digest.py > README.md
+      - name: Generate digest + archive
+        run: python gen_digest.py
 
       - name: Commit if changed
         run: |
           git config user.name  "market-digest-bot"
           git config user.email "bot@users.noreply.github.com"
-          if git diff --quiet README.md; then
-            echo "no change"
-          else
-            git add README.md
-            git commit -m "chore: update digest $(date -u +%Y-%m-%d)"
-            git push
+          git add -A
+          if git diff --cached --quiet; then
+            echo "no change"; exit 0
           fi
+          git commit -m "chore: update digest $(date -u +%Y-%m-%d)"
+          git push
